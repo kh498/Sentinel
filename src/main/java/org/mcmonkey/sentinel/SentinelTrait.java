@@ -341,30 +341,30 @@ public class SentinelTrait extends Trait {
             return;
         }
         if (attackerIsMe) {
-            if (safeShot && !shouldTarget((LivingEntity) event.getEntity())) {
+            if (this.safeShot && !shouldTarget((LivingEntity) event.getEntity())) {
                 event.setCancelled(true);
                 return;
             }
-            stats_damageGiven += event.getFinalDamage();
-            if (!enemyDrops) {
-                needsDropsClear.put(event.getEntity().getUniqueId(), true);
+            this.stats_damageGiven += event.getFinalDamage();
+            if (!this.enemyDrops) {
+                this.needsDropsClear.put(event.getEntity().getUniqueId(), true);
             }
             return;
         }
         Entity e = event.getDamager();
         if (!(e instanceof LivingEntity)) {
             if (e instanceof Projectile) {
-                ProjectileSource source = ((Projectile) e).getShooter();
+                final ProjectileSource source = ((Projectile) e).getShooter();
                 if (source instanceof LivingEntity) {
                     e = (LivingEntity) source;
                     if (e.getUniqueId().equals(getLivingEntity().getUniqueId())) {
-                        if (safeShot && !shouldTarget((LivingEntity) event.getEntity())) {
+                        if (this.safeShot && !shouldTarget((LivingEntity) event.getEntity())) {
                             event.setCancelled(true);
                             return;
                         }
-                        stats_damageGiven += event.getFinalDamage();
-                        if (!enemyDrops) {
-                            needsDropsClear.put(event.getEntity().getUniqueId(), true);
+                        this.stats_damageGiven += event.getFinalDamage();
+                        if (!this.enemyDrops) {
+                            this.needsDropsClear.put(event.getEntity().getUniqueId(), true);
                         }
                         return;
                     }
@@ -372,80 +372,77 @@ public class SentinelTrait extends Trait {
             }
         }
         boolean isEventTarget = false;
-        if (eventTargets.contains("pvp")
-                && event.getEntity() instanceof Player
-                && !CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
+        if (this.eventTargets.contains("pvp") && event.getEntity() instanceof Player &&
+            !CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
             isEventTarget = true;
         }
-        else if (eventTargets.contains("pve")
-                && !(event.getEntity() instanceof Player)
-                && event.getEntity() instanceof LivingEntity) {
+        else if (this.eventTargets.contains("pve") && !(event.getEntity() instanceof Player) &&
+                 event.getEntity() instanceof LivingEntity) {
             isEventTarget = true;
         }
-        else if (eventTargets.contains("pvnpc")
-                && event.getEntity() instanceof LivingEntity
-                && CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
+        else if (this.eventTargets.contains("pvnpc") && event.getEntity() instanceof LivingEntity &&
+                 CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
             isEventTarget = true;
         }
-        else if (eventTargets.contains("pvsentinel")
-                && event.getEntity() instanceof LivingEntity
-                && CitizensAPI.getNPCRegistry().isNPC(event.getEntity())
-                && CitizensAPI.getNPCRegistry().getNPC(event.getEntity()).hasTrait(SentinelTrait.class)) {
+        else if (this.eventTargets.contains("pvsentinel") && event.getEntity() instanceof LivingEntity &&
+                 CitizensAPI.getNPCRegistry().isNPC(event.getEntity()) &&
+                 CitizensAPI.getNPCRegistry().getNPC(event.getEntity()).hasTrait(SentinelTrait.class)) {
             isEventTarget = true;
         }
-        if (isEventTarget && e != null && e instanceof LivingEntity && canSee((LivingEntity) e) && !isIgnored((LivingEntity) e)) {
+        if (isEventTarget && e != null && e instanceof LivingEntity && canSee((LivingEntity) e) &&
+            !isIgnored((LivingEntity) e)) {
             addTarget(e.getUniqueId());
         }
     }
 
     @EventHandler
-    public void whenAnEnemyDies(EntityDeathEvent event) {
-        SentinelCurrentTarget target = new SentinelCurrentTarget();
+    public void whenAnEnemyDies(final EntityDeathEvent event) {
+        final SentinelCurrentTarget target = new SentinelCurrentTarget();
         target.targetID = event.getEntity().getUniqueId();
-        currentTargets.remove(target);
+        this.currentTargets.remove(target);
     }
 
     private boolean sentinelProtected;
 
     @Override
     public void onAttach() {
-        FileConfiguration config = SentinelPlugin.instance.getConfig();
-        attackRate = config.getInt("sentinel defaults.attack rate", 30);
-        healRate = config.getInt("sentinel defaults.heal rate", 30);
-        respawnTime = config.getInt("sentinel defaults.respawn time", 100);
-        rangedChase = config.getBoolean("sentinel defaults.ranged chase target", false);
-        closeChase = config.getBoolean("sentinel defaults.close chase target", true);
-        armor = config.getDouble("sentinel defaults.armor", -1);
-        damage = config.getDouble("sentinel defaults.damage", -1);
-        health = config.getDouble("sentinel defaults.health", 20);
-        if (npc.isSpawned()) {
-            getLivingEntity().setMaxHealth(health);
-            getLivingEntity().setHealth(health);
+        final FileConfiguration config = SentinelPlugin.instance.getConfig();
+        this.attackRate = config.getInt("sentinel defaults.attack rate", 30);
+        this.healRate = config.getInt("sentinel defaults.heal rate", 30);
+        this.respawnTime = config.getInt("sentinel defaults.respawn time", 100);
+        this.rangedChase = config.getBoolean("sentinel defaults.ranged chase target", false);
+        this.closeChase = config.getBoolean("sentinel defaults.close chase target", true);
+        this.armor = config.getDouble("sentinel defaults.armor", -1);
+        this.damage = config.getDouble("sentinel defaults.damage", -1);
+        this.health = config.getDouble("sentinel defaults.health", 20);
+        if (this.npc.isSpawned()) {
+            getLivingEntity().setMaxHealth(this.health);
+            getLivingEntity().setHealth(this.health);
         }
         setInvincible(config.getBoolean("sentinel defaults.invincible", false));
-        fightback = config.getBoolean("sentinel defaults.fightback", true);
-        needsAmmo = config.getBoolean("sentinel defaults.needs ammo", false);
-        safeShot = config.getBoolean("sentinel defaults.safe shot", true);
-        enemyDrops = config.getBoolean("sentinel defaults.enemy drops", false);
-        enemyTargetTime = config.getInt("sentinel defaults.enemy target time", 0);
-        speed = config.getInt("sentinel defaults.speed", 1);
-        if (speed <= 0) {
-            speed = 1;
+        this.fightback = config.getBoolean("sentinel defaults.fightback", true);
+        this.needsAmmo = config.getBoolean("sentinel defaults.needs ammo", false);
+        this.safeShot = config.getBoolean("sentinel defaults.safe shot", true);
+        this.enemyDrops = config.getBoolean("sentinel defaults.enemy drops", false);
+        this.enemyTargetTime = config.getInt("sentinel defaults.enemy target time", 0);
+        this.speed = config.getInt("sentinel defaults.speed", 1);
+        if (this.speed <= 0) {
+            this.speed = 1;
         }
-        autoswitch = config.getBoolean("sentinel defaults.autoswitch", false);
-        ignores.add(SentinelTarget.OWNER.name());
-        sentinelProtected = config.getBoolean("random.protected", false);
+        this.autoswitch = config.getBoolean("sentinel defaults.autoswitch", false);
+        this.ignores.add(SentinelTarget.OWNER.name());
+        this.sentinelProtected = config.getBoolean("random.protected", false);
     }
 
     public void useItem() {
-        if (npc.isSpawned() && getLivingEntity() instanceof Player) {
-            if (SentinelTarget.v1_9) {
-                PlayerAnimation.START_USE_MAINHAND_ITEM.play((Player) getLivingEntity());
+        if (this.npc.isSpawned() && getLivingEntity() instanceof Player) {
+            if (SentinelTarget.v1_8) {
+                PlayerAnimation.START_USE_ITEM.play((Player) getLivingEntity());
             }
-            BukkitRunnable runner = new BukkitRunnable() {
+            final BukkitRunnable runner = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (npc.isSpawned() && getLivingEntity() instanceof Player) {
+                    if (SentinelTrait.this.npc.isSpawned() && getLivingEntity() instanceof Player) {
                         PlayerAnimation.STOP_USE_ITEM.play((Player) getLivingEntity());
                     }
                 }
@@ -455,25 +452,26 @@ public class SentinelTrait extends Trait {
     }
 
     public void swingWeapon() {
-        if (npc.isSpawned() && getLivingEntity() instanceof Player) {
+        if (this.npc.isSpawned() && getLivingEntity() instanceof Player) {
             PlayerAnimation.ARM_SWING.play((Player) getLivingEntity());
         }
     }
 
     public double firingMinimumRange() {
-        EntityType type = getLivingEntity().getType();
+        final EntityType type = getLivingEntity().getType();
         if (type == EntityType.WITHER || type == EntityType.WITHER) {
             return 8; // Yikes!
         }
         return 2;
     }
 
-    public HashMap.SimpleEntry<Location, Vector> getLaunchDetail(Location target, Vector lead) {
+    public HashMap.SimpleEntry<Location, Vector> getLaunchDetail(final Location target, final Vector lead) {
         double speeda;
-        npc.faceLocation(target);
+        this.npc.faceLocation(target);
         double angt = Double.POSITIVE_INFINITY;
-        Location start = getLivingEntity().getEyeLocation().clone().add(getLivingEntity().getEyeLocation().getDirection().multiply(firingMinimumRange()));
-        double sbase = SentinelPlugin.instance.getConfig().getDouble("random.shoot speed minimum", 20);
+        final Location start = getLivingEntity().getEyeLocation().clone().add(
+            getLivingEntity().getEyeLocation().getDirection().multiply(firingMinimumRange()));
+        final double sbase = SentinelPlugin.instance.getConfig().getDouble("random.shoot speed minimum", 20);
         for (speeda = sbase; speeda <= sbase + 15; speeda += 5) {
             angt = SentinelUtilities.getArrowAngle(start, target, speeda, 20);
             if (!Double.isInfinite(angt)) {
@@ -483,8 +481,8 @@ public class SentinelTrait extends Trait {
         if (Double.isInfinite(angt)) {
             return null;
         }
-        double hangT = SentinelUtilities.hangtime(angt, speeda, target.getY() - start.getY(), 20);
-        Location to = target.clone().add(lead.clone().multiply(hangT));
+        final double hangT = SentinelUtilities.hangtime(angt, speeda, target.getY() - start.getY(), 20);
+        final Location to = target.clone().add(lead.clone().multiply(hangT));
         Vector relative = to.clone().subtract(start.toVector()).toVector();
         double deltaXZ = Math.sqrt(relative.getX() * relative.getX() + relative.getZ() * relative.getZ());
         if (deltaXZ == 0) {
@@ -501,7 +499,7 @@ public class SentinelTrait extends Trait {
         }
         relative.setY(Math.tan(angt) * deltaXZ);
         relative = relative.normalize();
-        Vector normrel = relative.clone();
+        final Vector normrel = relative.clone();
         speeda = speeda + (1.188 * hangT * hangT);
         relative = relative.multiply(speeda / 20.0);
         start.setDirection(normrel);
@@ -509,115 +507,125 @@ public class SentinelTrait extends Trait {
     }
 
     public double randomAcc() {
-        return SentinelUtilities.random.nextDouble() * accuracy * 2 - accuracy;
+        return SentinelUtilities.random.nextDouble() * this.accuracy * 2 - this.accuracy;
     }
 
-    public Vector fixForAcc(Vector input) {
+    public Vector fixForAcc(final Vector input) {
         return new Vector(input.getX() + randomAcc(), input.getY() + randomAcc(), input.getZ() + randomAcc());
     }
 
-    public void firePotion(ItemStack potion, Location target, Vector lead) {
-        stats_potionsThrown++;
-        HashMap.SimpleEntry<Location, Vector> start = getLaunchDetail(target, lead);
-        Entity entpotion = start.getKey().getWorld().spawnEntity(start.getKey(),
-                potion.getType() == Material.SPLASH_POTION ? EntityType.SPLASH_POTION : EntityType.LINGERING_POTION);
+    public void firePotion(final ItemStack potion, final Location target, final Vector lead) {
+        this.stats_potionsThrown++;
+        final HashMap.SimpleEntry<Location, Vector> start = getLaunchDetail(target, lead);
+        final Entity entpotion = start.getKey().getWorld().spawnEntity(start.getKey(),
+                                                                       potion.getType() == Material.SPLASH_POTION
+                                                                           ? EntityType.SPLASH_POTION
+                                                                           : EntityType.LINGERING_POTION);
         ((ThrownPotion) entpotion).setShooter(getLivingEntity());
         ((ThrownPotion) entpotion).setItem(potion);
         entpotion.setVelocity(fixForAcc(start.getValue()));
         swingWeapon();
     }
 
-    public void fireArrow(ItemStack type, Location target, Vector lead) {
-        HashMap.SimpleEntry<Location, Vector> start = getLaunchDetail(target, lead);
+    public void fireArrow(final ItemStack type, final Location target, final Vector lead) {
+        final HashMap.SimpleEntry<Location, Vector> start = getLaunchDetail(target, lead);
         if (start == null || start.getKey() == null) {
             return;
         }
-        stats_arrowsFired++;
-        Entity arrow;
+        this.stats_arrowsFired++;
+        final Entity arrow;
         if (SentinelTarget.v1_9) {
-            arrow = start.getKey().getWorld().spawnEntity(start.getKey(),
-                    type.getType() == Material.SPECTRAL_ARROW ? EntityType.SPECTRAL_ARROW :
-                            (type.getType() == Material.TIPPED_ARROW ? EntityType.TIPPED_ARROW : EntityType.ARROW));
+            arrow = start.getKey().getWorld().spawnEntity(start.getKey(), type.getType() == Material.SPECTRAL_ARROW
+                ? EntityType.SPECTRAL_ARROW
+                : (type.getType() == Material.TIPPED_ARROW ? EntityType.TIPPED_ARROW : EntityType.ARROW));
             ((Projectile) arrow).setShooter(getLivingEntity());
             if (arrow instanceof TippedArrow) {
-                PotionData data = ((PotionMeta) type.getItemMeta()).getBasePotionData();
+                final PotionData data = ((PotionMeta) type.getItemMeta()).getBasePotionData();
                 if (data.getType() == null || data.getType() == PotionType.UNCRAFTABLE) {
                     // TODO: Perhaps a **single** warning?
                 }
                 else {
                     ((TippedArrow) arrow).setBasePotionData(data);
-                    for (PotionEffect effect : ((PotionMeta) type.getItemMeta()).getCustomEffects()) {
+                    for (final PotionEffect effect : ((PotionMeta) type.getItemMeta()).getCustomEffects()) {
                         ((TippedArrow) arrow).addCustomEffect(effect, true);
                     }
                 }
             }
         }
         else {
-             arrow = start.getKey().getWorld().spawnEntity(start.getKey(), EntityType.ARROW);
+            arrow = start.getKey().getWorld().spawnEntity(start.getKey(), EntityType.ARROW);
             ((Projectile) arrow).setShooter(getLivingEntity());
         }
         arrow.setVelocity(fixForAcc(start.getValue()));
-        if (npc.getTrait(Inventory.class).getContents()[0].containsEnchantment(Enchantment.ARROW_FIRE)) {
+        if (this.npc.getTrait(Inventory.class).getContents()[0].containsEnchantment(Enchantment.ARROW_FIRE)) {
             arrow.setFireTicks(10000);
         }
         useItem();
     }
 
-    public void fireSnowball(Location target) {
+    public void fireSnowball(final Location target) {
         swingWeapon();
-        stats_snowballsThrown++;
-        npc.faceLocation(target);
-        Vector forward = getLivingEntity().getEyeLocation().getDirection();
-        Location spawnAt = getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
-        Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.SNOWBALL);
+        this.stats_snowballsThrown++;
+        this.npc.faceLocation(target);
+        final Vector forward = getLivingEntity().getEyeLocation().getDirection();
+        final Location spawnAt =
+            getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
+        final Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.SNOWBALL);
         ((Projectile) ent).setShooter(getLivingEntity());
-        ent.setVelocity(fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(2.0))); // TODO: Fiddle with '2.0'.
+        ent.setVelocity(fixForAcc(
+            target.clone().subtract(spawnAt).toVector().normalize().multiply(2.0))); // TODO: Fiddle with '2.0'.
     }
 
-    public void fireEgg(Location target) {
+    public void fireEgg(final Location target) {
         swingWeapon();
-        stats_eggsThrown++;
-        npc.faceLocation(target);
-        Vector forward = getLivingEntity().getEyeLocation().getDirection();
-        Location spawnAt = getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
-        Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.EGG);
+        this.stats_eggsThrown++;
+        this.npc.faceLocation(target);
+        final Vector forward = getLivingEntity().getEyeLocation().getDirection();
+        final Location spawnAt =
+            getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
+        final Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.EGG);
         ((Projectile) ent).setShooter(getLivingEntity());
-        ent.setVelocity(fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(2.0))); // TODO: Fiddle with '2.0'.
+        ent.setVelocity(fixForAcc(
+            target.clone().subtract(spawnAt).toVector().normalize().multiply(2.0))); // TODO: Fiddle with '2.0'.
     }
 
-    public void firePearl(LivingEntity target) {
+    public void firePearl(final LivingEntity target) {
         swingWeapon();
-        npc.faceLocation(target.getEyeLocation());
+        this.npc.faceLocation(target.getEyeLocation());
         // TODO: Maybe require entity is-on-ground?
-        stats_pearlsUsed++;
+        this.stats_pearlsUsed++;
         target.setVelocity(target.getVelocity().add(new Vector(0, getDamage(), 0)));
     }
 
-    public void fireFireball(Location target) {
+    public void fireFireball(final Location target) {
         swingWeapon();
-        stats_fireballsFired++;
-        npc.faceLocation(target);
-        Vector forward = getLivingEntity().getEyeLocation().getDirection();
-        Location spawnAt = getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
-        Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.SMALL_FIREBALL);
+        this.stats_fireballsFired++;
+        this.npc.faceLocation(target);
+        final Vector forward = getLivingEntity().getEyeLocation().getDirection();
+        final Location spawnAt =
+            getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
+        final Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.SMALL_FIREBALL);
         ((Projectile) ent).setShooter(getLivingEntity());
-        ent.setVelocity(fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(4))); // TODO: Fiddle with '4'.
+        ent.setVelocity(
+            fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(4))); // TODO: Fiddle with '4'.
     }
 
-    public void fireSkull(Location target) {
+    public void fireSkull(final Location target) {
         swingWeapon();
-        stats_skullsThrown++;
-        npc.faceLocation(target);
-        Vector forward = getLivingEntity().getEyeLocation().getDirection();
-        Location spawnAt = getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
-        Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.WITHER_SKULL);
+        this.stats_skullsThrown++;
+        this.npc.faceLocation(target);
+        final Vector forward = getLivingEntity().getEyeLocation().getDirection();
+        final Location spawnAt =
+            getLivingEntity().getEyeLocation().clone().add(forward.clone().multiply(firingMinimumRange()));
+        final Entity ent = spawnAt.getWorld().spawnEntity(spawnAt, EntityType.WITHER_SKULL);
         ((Projectile) ent).setShooter(getLivingEntity());
-        ent.setVelocity(fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(4))); // TODO: Fiddle with '4'.
+        ent.setVelocity(
+            fixForAcc(target.clone().subtract(spawnAt).toVector().normalize().multiply(4))); // TODO: Fiddle with '4'.
     }
 
     public double getDamage() {
-        if (damage < 0) {
-            ItemStack weapon;
+        if (this.damage < 0) {
+            final ItemStack weapon;
             if (SentinelTarget.v1_9) {
                 weapon = getLivingEntity().getEquipment().getItemInMainHand();
             }
@@ -630,11 +638,14 @@ public class SentinelTrait extends Trait {
             // TODO: Less randomness, more game-like calculations.
             double multiplier = 1;
             multiplier += weapon.getItemMeta() == null || !weapon.getItemMeta().hasEnchant(Enchantment.DAMAGE_ALL)
-                    ? 0 : weapon.getItemMeta().getEnchantLevel(Enchantment.DAMAGE_ALL) * 0.2;
+                ? 0
+                : weapon.getItemMeta().getEnchantLevel(Enchantment.DAMAGE_ALL) * 0.2;
             switch (weapon.getType()) {
                 case BOW:
-                    return 6 * (1 + (weapon.getItemMeta() == null || !weapon.getItemMeta().hasEnchant(Enchantment.ARROW_DAMAGE)
-                            ? 0 : weapon.getItemMeta().getEnchantLevel(Enchantment.ARROW_DAMAGE) * 0.3));
+                    return 6 * (1 + (weapon.getItemMeta() == null ||
+                                     !weapon.getItemMeta().hasEnchant(Enchantment.ARROW_DAMAGE)
+                        ? 0
+                        : weapon.getItemMeta().getEnchantLevel(Enchantment.ARROW_DAMAGE) * 0.3));
                 case DIAMOND_SWORD:
                     return 7 * multiplier;
                 case IRON_SWORD:
@@ -660,14 +671,14 @@ public class SentinelTrait extends Trait {
                     return 1 * multiplier;
             }
         }
-        return damage;
+        return this.damage;
     }
 
-    public double getArmor(LivingEntity ent) {
-        if (armor < 0) {
+    public double getArmor(final LivingEntity ent) {
+        if (this.armor < 0) {
             // TODO: Enchantments!
             double baseArmor = 0;
-            ItemStack helmet = ent.getEquipment().getHelmet();
+            final ItemStack helmet = ent.getEquipment().getHelmet();
             if (helmet != null && helmet.getType() == Material.DIAMOND_HELMET) {
                 baseArmor += 0.12;
             }
@@ -683,7 +694,7 @@ public class SentinelTrait extends Trait {
             if (helmet != null && helmet.getType() == Material.CHAINMAIL_HELMET) {
                 baseArmor += 0.08;
             }
-            ItemStack chestplate = ent.getEquipment().getChestplate();
+            final ItemStack chestplate = ent.getEquipment().getChestplate();
             if (chestplate != null && chestplate.getType() == Material.DIAMOND_CHESTPLATE) {
                 baseArmor += 0.32;
             }
@@ -699,7 +710,7 @@ public class SentinelTrait extends Trait {
             if (chestplate != null && chestplate.getType() == Material.CHAINMAIL_CHESTPLATE) {
                 baseArmor += 0.20;
             }
-            ItemStack leggings = ent.getEquipment().getLeggings();
+            final ItemStack leggings = ent.getEquipment().getLeggings();
             if (leggings != null && leggings.getType() == Material.DIAMOND_LEGGINGS) {
                 baseArmor += 0.24;
             }
@@ -715,7 +726,7 @@ public class SentinelTrait extends Trait {
             if (leggings != null && leggings.getType() == Material.CHAINMAIL_LEGGINGS) {
                 baseArmor += 0.16;
             }
-            ItemStack boots = ent.getEquipment().getBoots();
+            final ItemStack boots = ent.getEquipment().getBoots();
             if (boots != null && boots.getType() == Material.DIAMOND_BOOTS) {
                 baseArmor += 0.12;
             }
@@ -733,13 +744,13 @@ public class SentinelTrait extends Trait {
             }
             return Math.min(baseArmor, 0.80);
         }
-        return armor;
+        return this.armor;
     }
 
-    public void punch(LivingEntity entity) {
-        npc.faceLocation(entity.getLocation());
+    public void punch(final LivingEntity entity) {
+        this.npc.faceLocation(entity.getLocation());
         swingWeapon();
-        stats_punches++;
+        this.stats_punches++;
         if (SentinelPlugin.instance.getConfig().getBoolean("random.workaround damage", false)) {
             entity.damage(getDamage() * (1.0 - getArmor(entity)));
             Vector relative = entity.getLocation().toVector().subtract(getLivingEntity().getLocation().toVector());
@@ -747,8 +758,8 @@ public class SentinelTrait extends Trait {
             relative.setY(0.75);
             relative.multiply(0.5);
             entity.setVelocity(entity.getVelocity().add(relative));
-            if (!enemyDrops) {
-                needsDropsClear.put(entity.getUniqueId(), true);
+            if (!this.enemyDrops) {
+                this.needsDropsClear.put(entity.getUniqueId(), true);
             }
         }
         else {
@@ -758,38 +769,38 @@ public class SentinelTrait extends Trait {
 
     Location bunny_goal = new Location(null, 0, 0, 0);
 
-    public void chase(LivingEntity entity) {
-        if (npc.getNavigator().getTargetType() == TargetType.LOCATION
-                && npc.getNavigator().getTargetAsLocation() != null
-                && ((npc.getNavigator().getTargetAsLocation().getWorld().equals(entity.getWorld())
-                && npc.getNavigator().getTargetAsLocation().distanceSquared(entity.getLocation()) < 2 * 2)
-                || (npc.getNavigator().getTargetAsLocation().getWorld().equals(bunny_goal.getWorld())
-                && npc.getNavigator().getTargetAsLocation().distanceSquared(bunny_goal) < 2 * 2))) {
+    public void chase(final LivingEntity entity) {
+        if (this.npc.getNavigator().getTargetType() == TargetType.LOCATION &&
+            this.npc.getNavigator().getTargetAsLocation() != null &&
+            ((this.npc.getNavigator().getTargetAsLocation().getWorld().equals(entity.getWorld()) &&
+              this.npc.getNavigator().getTargetAsLocation().distanceSquared(entity.getLocation()) < 2 * 2) ||
+             (this.npc.getNavigator().getTargetAsLocation().getWorld().equals(this.bunny_goal.getWorld()) &&
+              this.npc.getNavigator().getTargetAsLocation().distanceSquared(this.bunny_goal) < 2 * 2))) {
             return;
         }
-        cleverTicks = 0;
-        chasing = entity;
-        npc.getNavigator().getDefaultParameters().stuckAction(null);
+        this.cleverTicks = 0;
+        this.chasing = entity;
+        this.npc.getNavigator().getDefaultParameters().stuckAction(null);
         /*
         Location goal = entity.getLocation().clone().add(entity.getVelocity().clone());
         npc.getNavigator().setTarget(goal);
         bunny_goal = goal;
         */
-        chased = true;
-        npc.getNavigator().setTarget(entity, false);
-        npc.getNavigator().getLocalParameters().speedModifier((float) speed);
+        this.chased = true;
+        this.npc.getNavigator().setTarget(entity, false);
+        this.npc.getNavigator().getLocalParameters().speedModifier((float) this.speed);
     }
 
     public ItemStack getArrow() {
-        if (!npc.hasTrait(Inventory.class)) {
-            return needsAmmo ? null : new ItemStack(Material.ARROW, 1);
+        if (!this.npc.hasTrait(Inventory.class)) {
+            return this.needsAmmo ? null : new ItemStack(Material.ARROW, 1);
         }
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
         for (int i = 0; i < items.length; i++) {
-            ItemStack item = items[i];
+            final ItemStack item = items[i];
             if (item != null) {
-                Material mat = item.getType();
+                final Material mat = item.getType();
                 if (SentinelTarget.v1_9) {
                     if (mat == Material.ARROW || mat == Material.TIPPED_ARROW || mat == Material.SPECTRAL_ARROW) {
                         return item.clone();
@@ -802,12 +813,12 @@ public class SentinelTrait extends Trait {
                 }
             }
         }
-        return needsAmmo ? null : new ItemStack(Material.ARROW, 1);
+        return this.needsAmmo ? null : new ItemStack(Material.ARROW, 1);
     }
 
     public void reduceDurability() {
         if (SentinelTarget.v1_9) {
-            ItemStack item = getLivingEntity().getEquipment().getItemInMainHand();
+            final ItemStack item = getLivingEntity().getEquipment().getItemInMainHand();
             if (item != null && item.getType() != Material.AIR) {
                 if (item.getDurability() >= item.getType().getMaxDurability() - 1) {
                     getLivingEntity().getEquipment().setItemInMainHand(null);
@@ -819,7 +830,7 @@ public class SentinelTrait extends Trait {
             }
         }
         else {
-            ItemStack item = getLivingEntity().getEquipment().getItemInHand();
+            final ItemStack item = getLivingEntity().getEquipment().getItemInHand();
             if (item != null && item.getType() != Material.AIR) {
                 if (item.getDurability() >= item.getType().getMaxDurability() - 1) {
                     getLivingEntity().getEquipment().setItemInHand(null);
@@ -833,16 +844,17 @@ public class SentinelTrait extends Trait {
     }
 
     public void takeArrow() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return;
         }
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
         for (int i = 0; i < items.length; i++) {
-            ItemStack item = items[i];
+            final ItemStack item = items[i];
             if (item != null) {
-                Material mat = item.getType();
-                if (mat == Material.ARROW || (SentinelTarget.v1_9 && (mat == Material.TIPPED_ARROW || mat == Material.SPECTRAL_ARROW))) {
+                final Material mat = item.getType();
+                if (mat == Material.ARROW ||
+                    (SentinelTarget.v1_9 && (mat == Material.TIPPED_ARROW || mat == Material.SPECTRAL_ARROW))) {
                     if (item.getAmount() > 1) {
                         item.setAmount(item.getAmount() - 1);
                         items[i] = item;
@@ -860,15 +872,15 @@ public class SentinelTrait extends Trait {
     }
 
     public void takeSnowball() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return;
         }
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
         for (int i = 0; i < items.length; i++) {
-            ItemStack item = items[i];
+            final ItemStack item = items[i];
             if (item != null) {
-                Material mat = item.getType();
+                final Material mat = item.getType();
                 if (mat == Material.SNOW_BALL) {
                     if (item.getAmount() > 1) {
                         item.setAmount(item.getAmount() - 1);
@@ -888,7 +900,7 @@ public class SentinelTrait extends Trait {
 
     public void takeOne() {
         if (SentinelTarget.v1_9) {
-            ItemStack item = getLivingEntity().getEquipment().getItemInMainHand();
+            final ItemStack item = getLivingEntity().getEquipment().getItemInMainHand();
             if (item != null && item.getType() != Material.AIR) {
                 if (item.getAmount() > 1) {
                     item.setAmount(item.getAmount() - 1);
@@ -900,7 +912,7 @@ public class SentinelTrait extends Trait {
             }
         }
         else {
-            ItemStack item = getLivingEntity().getEquipment().getItemInHand();
+            final ItemStack item = getLivingEntity().getEquipment().getItemInHand();
             if (item != null && item.getType() != Material.AIR) {
                 if (item.getAmount() > 1) {
                     item.setAmount(item.getAmount() - 1);
@@ -913,7 +925,7 @@ public class SentinelTrait extends Trait {
         }
     }
 
-    public boolean isWeapon(Material mat) {
+    public boolean isWeapon(final Material mat) {
         switch (mat) {
             case SPLASH_POTION:
             case LINGERING_POTION:
@@ -944,12 +956,12 @@ public class SentinelTrait extends Trait {
     }
 
     public void grabNextItem() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return;
         }
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
-        ItemStack held = items[0];
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
+        final ItemStack held = items[0];
         if (held != null && held.getType() != Material.AIR) {
             return;
         }
@@ -957,7 +969,7 @@ public class SentinelTrait extends Trait {
             ItemStack item = items[i];
             if (item != null) {
                 item = item.clone();
-                Material mat = item.getType();
+                final Material mat = item.getType();
                 if (isWeapon(mat)) {
                     if (item.getAmount() > 1) {
                         item.setAmount(item.getAmount() - 1);
@@ -981,19 +993,19 @@ public class SentinelTrait extends Trait {
     }
 
     public void rechase() {
-        if (chasing != null) {
-            chase(chasing);
+        if (this.chasing != null) {
+            chase(this.chasing);
         }
     }
 
     public void swapToRanged() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return;
         }
         int i = 0;
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
-        ItemStack held = items[0] == null ? null : items[0].clone();
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
+        final ItemStack held = items[0] == null ? null : items[0].clone();
         boolean edit = false;
         while (!isRanged() && i < items.length - 1) {
             i++;
@@ -1011,13 +1023,13 @@ public class SentinelTrait extends Trait {
     }
 
     public void swapToMelee() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return;
         }
         int i = 0;
-        Inventory inv = npc.getTrait(Inventory.class);
-        ItemStack[] items = inv.getContents();
-        ItemStack held = items[0] == null ? null : items[0].clone();
+        final Inventory inv = this.npc.getTrait(Inventory.class);
+        final ItemStack[] items = inv.getContents();
+        final ItemStack held = items[0] == null ? null : items[0].clone();
         boolean edit = false;
         while (isRanged() && i < items.length - 1) {
             i++;
@@ -1034,23 +1046,23 @@ public class SentinelTrait extends Trait {
         }
     }
 
-    public void tryAttack(LivingEntity entity) {
+    public void tryAttack(final LivingEntity entity) {
         if (!entity.getWorld().equals(getLivingEntity().getWorld())) {
             return;
         }
         // TODO: Simplify this code!
-        stats_attackAttempts++;
-        double dist = getLivingEntity().getEyeLocation().distanceSquared(entity.getEyeLocation());
+        this.stats_attackAttempts++;
+        final double dist = getLivingEntity().getEyeLocation().distanceSquared(entity.getEyeLocation());
         if (SentinelPlugin.debugMe) {
             SentinelPlugin.instance.getLogger().info("Sentinel: tryAttack at range " + dist);
         }
-        if (autoswitch && dist > 3 * 3) {
+        if (this.autoswitch && dist > 3 * 3) {
             swapToRanged();
         }
-        else if (autoswitch && dist < 3 * 3) {
+        else if (this.autoswitch && dist < 3 * 3) {
             swapToMelee();
         }
-        SentinelAttackEvent sat = new SentinelAttackEvent(npc);
+        final SentinelAttackEvent sat = new SentinelAttackEvent(this.npc);
         Bukkit.getPluginManager().callEvent(sat);
         if (sat.isCancelled()) {
             if (SentinelPlugin.debugMe) {
@@ -1058,233 +1070,234 @@ public class SentinelTrait extends Trait {
             }
             return;
         }
-        for (SentinelIntegration si : SentinelPlugin.integrations) {
+        for (final SentinelIntegration si : SentinelPlugin.integrations) {
             if (si.tryAttack(this, entity)) {
                 return;
             }
         }
         if (usesBow()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
-                ItemStack item = getArrow();
+                this.timeSinceAttack = 0;
+                final ItemStack item = getArrow();
                 if (item != null) {
                     fireArrow(item, entity.getEyeLocation(), entity.getVelocity());
-                    if (needsAmmo) {
+                    if (this.needsAmmo) {
                         reduceDurability();
                         takeArrow();
                         grabNextItem();
                     }
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesSnowball()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
-                ItemStack item = getArrow();
+                this.timeSinceAttack = 0;
+                final ItemStack item = getArrow();
                 if (item != null) {
                     fireSnowball(entity.getEyeLocation());
-                    if (needsAmmo) {
+                    if (this.needsAmmo) {
                         takeSnowball();
                         grabNextItem();
                     }
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesPotion()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 if (SentinelTarget.v1_9) {
-                    firePotion(getLivingEntity().getEquipment().getItemInMainHand(),
-                            entity.getEyeLocation(), entity.getVelocity());
+                    firePotion(getLivingEntity().getEquipment().getItemInMainHand(), entity.getEyeLocation(),
+                               entity.getVelocity());
                 }
                 else {
-                    firePotion(getLivingEntity().getEquipment().getItemInHand(),
-                            entity.getEyeLocation(), entity.getVelocity());
+                    firePotion(getLivingEntity().getEquipment().getItemInHand(), entity.getEyeLocation(),
+                               entity.getVelocity());
                 }
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesEgg()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 fireEgg(entity.getEyeLocation());
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesPearl()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 firePearl(entity);
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesWitherSkull()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 fireSkull(entity.getEyeLocation());
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesFireball()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 fireFireball(entity.getEyeLocation());
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesLightning()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 swingWeapon();
                 entity.getWorld().strikeLightningEffect(entity.getLocation());
                 entity.damage(getDamage());
-                if (needsAmmo) {
+                if (this.needsAmmo) {
                     takeOne();
                     grabNextItem();
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else if (usesSpectral()) {
             if (canSee(entity)) {
-                if (timeSinceAttack < attackRateRanged) {
-                    if (rangedChase) {
+                if (this.timeSinceAttack < this.attackRateRanged) {
+                    if (this.rangedChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 if (!entity.isGlowing()) {
                     swingWeapon();
                     try {
-                        Sound snd = Sound.valueOf(SentinelPlugin.instance.getConfig().getString("random.spectral sound", "ENTITY_VILLAGER_YES"));
+                        final Sound snd = Sound.valueOf(SentinelPlugin.instance.getConfig()
+                                                                               .getString("random.spectral sound",
+                                                                                          "ENTITY_VILLAGER_YES"));
                         if (snd != null) {
                             entity.getWorld().playSound(entity.getLocation(), snd, 1f, 1f);
                         }
-                    }
-                    catch (Exception e) {
+                    } catch (final Exception e) {
                         // Do nothing!
                     }
                     entity.setGlowing(true);
-                    if (needsAmmo) {
+                    if (this.needsAmmo) {
                         takeOne();
                         grabNextItem();
                     }
                 }
             }
-            else if (rangedChase) {
+            else if (this.rangedChase) {
                 chase(entity);
             }
         }
         else {
             if (dist < 3 * 3) {
-                if (timeSinceAttack < attackRate) {
+                if (this.timeSinceAttack < this.attackRate) {
                     if (SentinelPlugin.debugMe) {
                         SentinelPlugin.instance.getLogger().info("Sentinel: tryAttack refused, timeSinceAttack");
                     }
-                    if (closeChase) {
+                    if (this.closeChase) {
                         rechase();
                     }
                     return;
                 }
-                timeSinceAttack = 0;
+                this.timeSinceAttack = 0;
                 // TODO: Damage sword if needed!
                 if (SentinelPlugin.debugMe) {
                     SentinelPlugin.instance.getLogger().info("Sentinel: tryAttack passed!");
                 }
                 punch(entity);
-                if (needsAmmo && shouldTakeDura()) {
+                if (this.needsAmmo && shouldTakeDura()) {
                     reduceDurability();
                     grabNextItem();
                 }
             }
-            else if (closeChase) {
+            else if (this.closeChase) {
                 if (SentinelPlugin.debugMe) {
                     SentinelPlugin.instance.getLogger().info("Sentinel: tryAttack refused, range");
                 }
@@ -1293,100 +1306,94 @@ public class SentinelTrait extends Trait {
         }
     }
 
-    public boolean canSee(LivingEntity entity) {
+    public boolean canSee(final LivingEntity entity) {
         return getLivingEntity().hasLineOfSight(entity);
     }
 
     public LivingEntity getLivingEntity() {
         // Not a good idea to turn a non-living NPC into a Sentinel for now.
-        return (LivingEntity) npc.getEntity();
+        return (LivingEntity) this.npc.getEntity();
     }
 
     public boolean isRanged() {
-        return usesBow()
-                || usesFireball()
-                || usesSnowball()
-                || usesLightning()
-                || usesSpectral()
-                || usesPotion();
+        return usesBow() || usesFireball() || usesSnowball() || usesLightning() || usesSpectral() || usesPotion();
     }
 
     public boolean usesBow() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.BOW && getArrow() != null;
     }
 
     public boolean usesFireball() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.BLAZE_ROD;
     }
 
     public boolean usesSnowball() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.SNOW_BALL;
     }
 
     public boolean usesLightning() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.NETHER_STAR;
     }
 
     public boolean usesEgg() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.EGG;
     }
 
     public boolean usesPearl() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.ENDER_PEARL;
     }
 
     public boolean usesWitherSkull() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
         if (!SentinelPlugin.instance.getConfig().getBoolean("random.skull allowed", true)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
-        return it != null && (it.getType() == Material.SKULL_ITEM
-                || it.getType() == Material.SKULL);
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
+        return it != null && (it.getType() == Material.SKULL_ITEM || it.getType() == Material.SKULL);
     }
 
     public boolean usesSpectral() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
         if (!SentinelTarget.v1_10) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         return it != null && it.getType() == Material.SPECTRAL_ARROW;
     }
 
     public boolean usesPotion() {
-        if (!npc.hasTrait(Inventory.class)) {
+        if (!this.npc.hasTrait(Inventory.class)) {
             return false;
         }
-        ItemStack it = npc.getTrait(Inventory.class).getContents()[0];
+        final ItemStack it = this.npc.getTrait(Inventory.class).getContents()[0];
         if (it == null) {
             return false;
         }
@@ -1394,18 +1401,18 @@ public class SentinelTrait extends Trait {
     }
 
     public boolean shouldTakeDura() {
-        Material type;
+        final Material type;
         if (SentinelTarget.v1_9) {
             type = getLivingEntity().getEquipment().getItemInMainHand().getType();
         }
         else {
             type = getLivingEntity().getEquipment().getItemInHand().getType();
         }
-        return type == Material.BOW || type == Material.DIAMOND_SWORD || type == Material.GOLD_SWORD
-                || type == Material.IRON_SWORD || type == Material.WOOD_SWORD; // TODO: Tools?
+        return type == Material.BOW || type == Material.DIAMOND_SWORD || type == Material.GOLD_SWORD ||
+               type == Material.IRON_SWORD || type == Material.WOOD_SWORD; // TODO: Tools?
     }
 
-    public boolean shouldTarget(LivingEntity entity) {
+    public boolean shouldTarget(final LivingEntity entity) {
         if (entity.getUniqueId().equals(getLivingEntity().getUniqueId())) {
             return false;
         }
@@ -1414,9 +1421,9 @@ public class SentinelTrait extends Trait {
 
     public HashSet<SentinelCurrentTarget> currentTargets = new HashSet<SentinelCurrentTarget>();
 
-    private HashSet<UUID> greetedAlready = new HashSet<UUID>();
+    private final HashSet<UUID> greetedAlready = new HashSet<UUID>();
 
-    public void addTarget(UUID id) {
+    public void addTarget(final UUID id) {
         if (id.equals(getLivingEntity().getUniqueId())) {
             return;
         }
@@ -1424,11 +1431,11 @@ public class SentinelTrait extends Trait {
             return;
         }
         addTargetNoBounce(id);
-        if (squad != null) {
-            for (NPC npc : CitizensAPI.getNPCRegistry()) {
+        if (this.squad != null) {
+            for (final NPC npc : CitizensAPI.getNPCRegistry()) {
                 if (npc.hasTrait(SentinelTrait.class)) {
-                    SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
-                    if (sentinel.squad != null && sentinel.squad.equals(squad)) {
+                    final SentinelTrait sentinel = npc.getTrait(SentinelTrait.class);
+                    if (sentinel.squad != null && sentinel.squad.equals(this.squad)) {
                         sentinel.addTargetNoBounce(id);
                     }
                 }
@@ -1436,17 +1443,17 @@ public class SentinelTrait extends Trait {
         }
     }
 
-    public void addTargetNoBounce(UUID id) {
-        SentinelCurrentTarget target = new SentinelCurrentTarget();
+    public void addTargetNoBounce(final UUID id) {
+        final SentinelCurrentTarget target = new SentinelCurrentTarget();
         target.targetID = id;
-        target.ticksLeft = enemyTargetTime;
-        currentTargets.remove(target);
-        currentTargets.add(target);
+        target.ticksLeft = this.enemyTargetTime;
+        this.currentTargets.remove(target);
+        this.currentTargets.add(target);
     }
 
-    public boolean isRegexTargeted(String name, List<String> regexes) {
-        for (String str : regexes) {
-            Pattern pattern = Pattern.compile(".*" + str + ".*", Pattern.CASE_INSENSITIVE);
+    public boolean isRegexTargeted(final String name, final List<String> regexes) {
+        for (final String str : regexes) {
+            final Pattern pattern = Pattern.compile(".*" + str + ".*", Pattern.CASE_INSENSITIVE);
             // TODO: Is this more efficient than .matches, or should we change it?
             if (pattern.matcher(name).matches()) {
                 return true;
@@ -1455,10 +1462,10 @@ public class SentinelTrait extends Trait {
         return false;
     }
 
-    public boolean isIgnored(LivingEntity entity) {
+    public boolean isIgnored(final LivingEntity entity) {
         if (entity.hasMetadata("NPC")) {
-            return ignores.contains(SentinelTarget.NPCS.name()) ||
-                    isRegexTargeted(CitizensAPI.getNPCRegistry().getNPC(entity).getName(), npcNameIgnores);
+            return this.ignores.contains(SentinelTarget.NPCS.name()) ||
+                   isRegexTargeted(CitizensAPI.getNPCRegistry().getNPC(entity).getName(), this.npcNameIgnores);
         }
         if (entity.getUniqueId().equals(getLivingEntity().getUniqueId())) {
             return true;
@@ -1467,46 +1474,49 @@ public class SentinelTrait extends Trait {
             return true;
         }
         else if (entity instanceof Player) {
-            if (((Player) entity).getGameMode() == GameMode.CREATIVE || ((Player) entity).getGameMode() == GameMode.SPECTATOR) {
+            if (((Player) entity).getGameMode() == GameMode.CREATIVE ||
+                ((Player) entity).getGameMode() == GameMode.SPECTATOR) {
                 return true;
             }
-            if (isRegexTargeted(((Player) entity).getName(), playerNameIgnores)) {
+            if (isRegexTargeted(((Player) entity).getName(), this.playerNameIgnores)) {
                 return true;
             }
             if (SentinelPlugin.instance.vaultPerms != null) {
-                for (String group : groupIgnores) {
+                for (final String group : this.groupIgnores) {
                     if (SentinelPlugin.instance.vaultPerms.playerInGroup((Player) entity, group)) {
                         return true;
                     }
                 }
             }
         }
-        else if (isRegexTargeted(entity.getCustomName() == null ? entity.getType().name() : entity.getCustomName(), entityNameIgnores)) {
+        else if (isRegexTargeted(entity.getCustomName() == null ? entity.getType().name() : entity.getCustomName(),
+                                 this.entityNameIgnores)) {
             return true;
         }
-        if (ignores.contains(SentinelTarget.OWNER.name()) && entity.getUniqueId().equals(npc.getTrait(Owner.class).getOwnerId())) {
+        if (this.ignores.contains(SentinelTarget.OWNER.name()) &&
+            entity.getUniqueId().equals(this.npc.getTrait(Owner.class).getOwnerId())) {
             return true;
         }
-        HashSet<SentinelTarget> possible = SentinelPlugin.entityToTargets.get(entity.getType());
-        for (SentinelTarget poss : possible) {
-            if (ignores.contains(poss.name())) {
+        final HashSet<SentinelTarget> possible = SentinelPlugin.entityToTargets.get(entity.getType());
+        for (final SentinelTarget poss : possible) {
+            if (this.ignores.contains(poss.name())) {
                 return true;
             }
         }
         if (SentinelTarget.v1_9) {
-            if (entity.getEquipment() != null && entity.getEquipment().getItemInMainHand() != null
-                    && isRegexTargeted(entity.getEquipment().getItemInMainHand().getType().name(), heldItemIgnores)) {
+            if (entity.getEquipment() != null && entity.getEquipment().getItemInMainHand() != null &&
+                isRegexTargeted(entity.getEquipment().getItemInMainHand().getType().name(), this.heldItemIgnores)) {
                 return true;
             }
         }
         else {
-            if (entity.getEquipment() != null && entity.getEquipment().getItemInHand() != null
-                    && isRegexTargeted(entity.getEquipment().getItemInHand().getType().name(), heldItemIgnores)) {
+            if (entity.getEquipment() != null && entity.getEquipment().getItemInHand() != null &&
+                isRegexTargeted(entity.getEquipment().getItemInHand().getType().name(), this.heldItemIgnores)) {
                 return true;
             }
         }
-        for (SentinelIntegration integration : SentinelPlugin.integrations) {
-            for (String text : otherIgnores) {
+        for (final SentinelIntegration integration : SentinelPlugin.integrations) {
+            for (final String text : this.otherIgnores) {
                 if (integration.isTarget(entity, text)) {
                     return true;
                 }
@@ -1515,8 +1525,8 @@ public class SentinelTrait extends Trait {
         return false;
     }
 
-    public boolean isTargeted(LivingEntity entity) {
-        SentinelCurrentTarget target = new SentinelCurrentTarget();
+    public boolean isTargeted(final LivingEntity entity) {
+        final SentinelCurrentTarget target = new SentinelCurrentTarget();
         target.targetID = entity.getUniqueId();
         if (entity.getUniqueId().equals(getLivingEntity().getUniqueId())) {
             return false;
@@ -1524,51 +1534,53 @@ public class SentinelTrait extends Trait {
         if (getGuarding() != null && entity.getUniqueId().equals(getGuarding())) {
             return false;
         }
-        if (currentTargets.contains(target)) {
+        if (this.currentTargets.contains(target)) {
             return true;
         }
         if (entity.hasMetadata("NPC")) {
-            return targets.contains(SentinelTarget.NPCS.name()) ||
-                    isRegexTargeted(CitizensAPI.getNPCRegistry().getNPC(entity).getName(), npcNameTargets);
+            return this.targets.contains(SentinelTarget.NPCS.name()) ||
+                   isRegexTargeted(CitizensAPI.getNPCRegistry().getNPC(entity).getName(), this.npcNameTargets);
         }
         if (entity instanceof Player) {
-            if (isRegexTargeted(((Player) entity).getName(), playerNameTargets)) {
+            if (isRegexTargeted(((Player) entity).getName(), this.playerNameTargets)) {
                 return true;
             }
             if (SentinelPlugin.instance.vaultPerms != null) {
-                for (String group : groupTargets) {
+                for (final String group : this.groupTargets) {
                     if (SentinelPlugin.instance.vaultPerms.playerInGroup((Player) entity, group)) {
                         return true;
                     }
                 }
             }
         }
-        else if (isRegexTargeted(entity.getCustomName() == null ? entity.getType().name() : entity.getCustomName(), entityNameTargets)) {
+        else if (isRegexTargeted(entity.getCustomName() == null ? entity.getType().name() : entity.getCustomName(),
+                                 this.entityNameTargets)) {
             return true;
         }
-        if (targets.contains(SentinelTarget.OWNER.name()) && entity.getUniqueId().equals(npc.getTrait(Owner.class).getOwnerId())) {
+        if (this.targets.contains(SentinelTarget.OWNER.name()) &&
+            entity.getUniqueId().equals(this.npc.getTrait(Owner.class).getOwnerId())) {
             return true;
         }
-        HashSet<SentinelTarget> possible = SentinelPlugin.entityToTargets.get(entity.getType());
-        for (SentinelTarget poss : possible) {
-            if (targets.contains(poss.name())) {
+        final HashSet<SentinelTarget> possible = SentinelPlugin.entityToTargets.get(entity.getType());
+        for (final SentinelTarget poss : possible) {
+            if (this.targets.contains(poss.name())) {
                 return true;
             }
         }
         if (SentinelTarget.v1_9) {
-            if (entity.getEquipment() != null && entity.getEquipment().getItemInMainHand() != null
-                    && isRegexTargeted(entity.getEquipment().getItemInMainHand().getType().name(), heldItemTargets)) {
+            if (entity.getEquipment() != null && entity.getEquipment().getItemInMainHand() != null &&
+                isRegexTargeted(entity.getEquipment().getItemInMainHand().getType().name(), this.heldItemTargets)) {
                 return true;
             }
         }
         else {
-            if (entity.getEquipment() != null && entity.getEquipment().getItemInHand() != null
-                    && isRegexTargeted(entity.getEquipment().getItemInHand().getType().name(), heldItemTargets)) {
+            if (entity.getEquipment() != null && entity.getEquipment().getItemInHand() != null &&
+                isRegexTargeted(entity.getEquipment().getItemInHand().getType().name(), this.heldItemTargets)) {
                 return true;
             }
         }
-        for (SentinelIntegration integration : SentinelPlugin.integrations) {
-            for (String text : otherTargets) {
+        for (final SentinelIntegration integration : SentinelPlugin.integrations) {
+            for (final String text : this.otherTargets) {
                 if (integration.isTarget(entity, text)) {
                     return true;
                 }
@@ -1584,13 +1596,13 @@ public class SentinelTrait extends Trait {
      * Failing a direct line of sight, the nearest entity in range at all will be chosen.
      */
     public LivingEntity findBestTarget() {
-        boolean ignoreGlow = usesSpectral();
-        double rangesquared = range * range;
-        double crsq = chaseRange * chaseRange;
-        Location pos = getGuardZone();
+        final boolean ignoreGlow = usesSpectral();
+        double rangesquared = this.range * this.range;
+        final double crsq = this.chaseRange * this.chaseRange;
+        final Location pos = getGuardZone();
         if (!getGuardZone().getWorld().equals(getLivingEntity().getWorld())) {
             // Emergency corrective measures...
-            npc.getNavigator().cancelNavigation();
+            this.npc.getNavigator().cancelNavigation();
             getLivingEntity().teleport(getGuardZone());
             return null;
         }
@@ -1598,14 +1610,15 @@ public class SentinelTrait extends Trait {
             return null;
         }
         LivingEntity closest = null;
-        for (LivingEntity ent : getLivingEntity().getWorld().getLivingEntities()) {
+        for (final LivingEntity ent : getLivingEntity().getWorld().getLivingEntities()) {
             if ((ignoreGlow && ent.isGlowing()) || ent.isDead()) {
                 continue;
             }
-            double dist = ent.getEyeLocation().distanceSquared(pos);
-            SentinelCurrentTarget sct = new SentinelCurrentTarget();
+            final double dist = ent.getEyeLocation().distanceSquared(pos);
+            final SentinelCurrentTarget sct = new SentinelCurrentTarget();
             sct.targetID = ent.getUniqueId();
-            if ((dist < rangesquared && shouldTarget(ent) && canSee(ent)) || (dist < crsq && currentTargets.contains(sct))) {
+            if ((dist < rangesquared && shouldTarget(ent) && canSee(ent)) ||
+                (dist < crsq && this.currentTargets.contains(sct))) {
                 rangesquared = dist;
                 closest = ent;
             }
@@ -1617,34 +1630,34 @@ public class SentinelTrait extends Trait {
 
     public long timeSinceHeal = 0;
 
-    private Entity getEntityForID(UUID id) {
+    private Entity getEntityForID(final UUID id) {
         return Bukkit.getServer().getEntity(id);
     }
 
     private void updateTargets() {
-        for (SentinelCurrentTarget uuid : new HashSet<SentinelCurrentTarget>(currentTargets)) {
-            Entity e = getEntityForID(uuid.targetID);
+        for (final SentinelCurrentTarget uuid : new HashSet<SentinelCurrentTarget>(this.currentTargets)) {
+            final Entity e = getEntityForID(uuid.targetID);
             if (e == null) {
-                currentTargets.remove(uuid);
+                this.currentTargets.remove(uuid);
                 continue;
             }
             if (e instanceof Player && ((Player) e).getGameMode() == GameMode.CREATIVE) {
-                currentTargets.remove(uuid);
+                this.currentTargets.remove(uuid);
                 continue;
             }
             if (e.isDead()) {
-                currentTargets.remove(uuid);
+                this.currentTargets.remove(uuid);
                 continue;
             }
-            double d = e.getLocation().distanceSquared(getLivingEntity().getLocation());
-            if (d > range * range * 4 && d > chaseRange * chaseRange * 4) {
-                currentTargets.remove(uuid);
+            final double d = e.getLocation().distanceSquared(getLivingEntity().getLocation());
+            if (d > this.range * this.range * 4 && d > this.chaseRange * this.chaseRange * 4) {
+                this.currentTargets.remove(uuid);
                 continue;
             }
             if (uuid.ticksLeft > 0) {
                 uuid.ticksLeft -= SentinelPlugin.instance.tickRate;
                 if (uuid.ticksLeft <= 0) {
-                    currentTargets.remove(uuid);
+                    this.currentTargets.remove(uuid);
                 }
             }
         }
@@ -1655,40 +1668,42 @@ public class SentinelTrait extends Trait {
     public boolean chased = false;
 
     public void runUpdate() {
-        canEnforce = true;
-        timeSinceAttack += SentinelPlugin.instance.tickRate;
-        timeSinceHeal += SentinelPlugin.instance.tickRate;
+        this.canEnforce = true;
+        this.timeSinceAttack += SentinelPlugin.instance.tickRate;
+        this.timeSinceHeal += SentinelPlugin.instance.tickRate;
         if (getLivingEntity().getLocation().getY() <= 0) {
             getLivingEntity().damage(1);
-            if (!npc.isSpawned()) {
+            if (!this.npc.isSpawned()) {
                 if (getGuarding() != null && Bukkit.getPlayer(getGuarding()) != null) {
-                    if (respawnTime > 0 && respawnMe == null) {
-                        npc.spawn(Bukkit.getPlayer(getGuarding()).getLocation());
+                    if (this.respawnTime > 0 && this.respawnMe == null) {
+                        this.npc.spawn(Bukkit.getPlayer(getGuarding()).getLocation());
                     }
                 }
                 return;
             }
         }
-        if (healRate > 0 && timeSinceHeal > healRate && getLivingEntity().getHealth() < health) {
-            getLivingEntity().setHealth(Math.min(getLivingEntity().getHealth() + 1.0, health));
-            timeSinceHeal = 0;
+        if (this.healRate > 0 && this.timeSinceHeal > this.healRate && getLivingEntity().getHealth() < this.health) {
+            getLivingEntity().setHealth(Math.min(getLivingEntity().getHealth() + 1.0, this.health));
+            this.timeSinceHeal = 0;
         }
-        double crsq = chaseRange * chaseRange;
+        final double crsq = this.chaseRange * this.chaseRange;
         updateTargets();
-        boolean goHome = chased;
+        boolean goHome = this.chased;
         LivingEntity target = findBestTarget();
         if (target != null) {
-            Location near = nearestPathPoint();
+            final Location near = nearestPathPoint();
             if (SentinelPlugin.debugMe) {
                 SentinelPlugin.instance.getLogger().info("Sentinel: target selected to be " + target.getName());
             }
             if (crsq <= 0 || near == null || near.distanceSquared(target.getLocation()) <= crsq) {
                 if (SentinelPlugin.debugMe) {
-                    SentinelPlugin.instance.getLogger().info("Sentinel: Attack target within range of safe zone: "
-                            + (near == null ? "Any" : near.distanceSquared(target.getLocation())));
+                    SentinelPlugin.instance.getLogger().info("Sentinel: Attack target within range of safe zone: " + (
+                        near == null
+                            ? "Any"
+                            : near.distanceSquared(target.getLocation())));
                 }
-                chasing = target;
-                cleverTicks = 0;
+                this.chasing = target;
+                this.cleverTicks = 0;
                 tryAttack(target);
                 goHome = false;
             }
@@ -1697,59 +1712,61 @@ public class SentinelTrait extends Trait {
                     SentinelPlugin.instance.getLogger().info("Sentinel: Actually, that target is bad!");
                 }
                 target = null;
-                chasing = null;
-                cleverTicks = 0;
+                this.chasing = null;
+                this.cleverTicks = 0;
             }
         }
-        else if(chasing != null && chasing.isValid()) {
-            cleverTicks++;
-            if (cleverTicks >= SentinelPlugin.instance.getConfig().getInt("random.clever ticks", 10)) {
-                chasing = null;
+        else if (this.chasing != null && this.chasing.isValid()) {
+            this.cleverTicks++;
+            if (this.cleverTicks >= SentinelPlugin.instance.getConfig().getInt("random.clever ticks", 10)) {
+                this.chasing = null;
             }
             else {
-                Location near = nearestPathPoint();
-                if (crsq <= 0 || near == null || near.distanceSquared(chasing.getLocation()) <= crsq) {
-                    tryAttack(chasing);
+                final Location near = nearestPathPoint();
+                if (crsq <= 0 || near == null || near.distanceSquared(this.chasing.getLocation()) <= crsq) {
+                    tryAttack(this.chasing);
                     goHome = false;
                 }
             }
         }
         if (getGuarding() != null) {
-            Player player = Bukkit.getPlayer(getGuarding());
+            final Player player = Bukkit.getPlayer(getGuarding());
             if (player != null) {
-                Location myLoc = getLivingEntity().getLocation();
-                Location theirLoc = player.getLocation();
-                double dist = theirLoc.getWorld().equals(myLoc.getWorld()) ? myLoc.distanceSquared(theirLoc) : MAX_DIST;
+                final Location myLoc = getLivingEntity().getLocation();
+                final Location theirLoc = player.getLocation();
+                final double dist =
+                    theirLoc.getWorld().equals(myLoc.getWorld()) ? myLoc.distanceSquared(theirLoc) : MAX_DIST;
                 if (dist > 60 * 60) {
-                    npc.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                    this.npc.teleport(player.getLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
                 }
                 if (dist > 7 * 7) {
-                    npc.getNavigator().getDefaultParameters().range(100);
-                    npc.getNavigator().getDefaultParameters().stuckAction(TeleportStuckAction.INSTANCE);
-                    npc.getNavigator().setTarget(player.getLocation());
-                    npc.getNavigator().getLocalParameters().speedModifier((float) speed);
-                    chased = true;
+                    this.npc.getNavigator().getDefaultParameters().range(100);
+                    this.npc.getNavigator().getDefaultParameters().stuckAction(TeleportStuckAction.INSTANCE);
+                    this.npc.getNavigator().setTarget(player.getLocation());
+                    this.npc.getNavigator().getLocalParameters().speedModifier((float) this.speed);
+                    this.chased = true;
                 }
                 goHome = false;
             }
         }
-        if (goHome && chaseRange > 0 && target == null) {
-            Location near = nearestPathPoint();
-            if (near != null && (chasing == null || near.distanceSquared(chasing.getLocation()) > crsq)) {
+        if (goHome && this.chaseRange > 0 && target == null) {
+            final Location near = nearestPathPoint();
+            if (near != null && (this.chasing == null || near.distanceSquared(this.chasing.getLocation()) > crsq)) {
                 if (SentinelPlugin.debugMe) {
                     if (near.distanceSquared(getLivingEntity().getLocation()) > 3 * 3) {
                         SentinelPlugin.instance.getLogger().info("Sentinel: screw you guys, I'm going home!");
                     }
                 }
-                npc.getNavigator().getDefaultParameters().stuckAction(TeleportStuckAction.INSTANCE);
-                npc.getNavigator().setTarget(near);
-                npc.getNavigator().getLocalParameters().speedModifier((float) speed);
-                chased = false;
+                this.npc.getNavigator().getDefaultParameters().stuckAction(TeleportStuckAction.INSTANCE);
+                this.npc.getNavigator().setTarget(near);
+                this.npc.getNavigator().getLocalParameters().speedModifier((float) this.speed);
+                this.chased = false;
             }
             else {
                 if (SentinelPlugin.debugMe) {
                     if (near != null && near.distanceSquared(getLivingEntity().getLocation()) > 3 * 3) {
-                        SentinelPlugin.instance.getLogger().info("Sentinel: I'll just stand here and hope they come out...");
+                        SentinelPlugin.instance.getLogger()
+                                               .info("Sentinel: I'll just stand here and hope they come out...");
                     }
                 }
             }
@@ -1760,13 +1777,13 @@ public class SentinelTrait extends Trait {
 
     public Location getGuardZone() {
         if (getGuarding() != null) {
-            Player player = Bukkit.getPlayer(getGuarding());
+            final Player player = Bukkit.getPlayer(getGuarding());
             if (player != null) {
                 return player.getLocation();
             }
         }
-        if (chaseRange > 0) {
-            Location goal = nearestPathPoint();
+        if (this.chaseRange > 0) {
+            final Location goal = nearestPathPoint();
             if (goal != null) {
                 return goal;
             }
@@ -1778,39 +1795,41 @@ public class SentinelTrait extends Trait {
         if (!SentinelTarget.v1_9) {
             return null; // TODO: !!!
         }
-        if (!npc.hasTrait(Waypoints.class)) {
+        if (!this.npc.hasTrait(Waypoints.class)) {
             return null;
         }
-        Waypoints wp = npc.getTrait(Waypoints.class);
-        if (!(wp.getCurrentProvider() instanceof WaypointProvider.EnumerableWaypointProvider)) {
-            return null;
-        }
-        Location baseloc = getLivingEntity().getLocation();
-        Location nearest = null;
-        double dist = MAX_DIST;
-        for (Waypoint wayp : ((WaypointProvider.EnumerableWaypointProvider) wp.getCurrentProvider()).waypoints()) {
-            Location l = wayp.getLocation();
-            if (!l.getWorld().equals(baseloc.getWorld())) {
-                continue;
-            }
-            double d = baseloc.distanceSquared(l);
-            if (d < dist) {
-                dist = d;
-                nearest = l;
-            }
-        }
-        return nearest;
+//        final Waypoints wp = this.npc.getTrait(Waypoints.class);
+//        if (!(wp.getCurrentProvider() instanceof WaypointProvider.EnumerableWaypointProvider)) {
+//            return null;
+//        }
+//        final Location baseloc = getLivingEntity().getLocation();
+//        Location nearest = null;
+//        double dist = MAX_DIST;
+//        for (final Waypoint wayp : ((WaypointProvider.EnumerableWaypointProvider) wp.getCurrentProvider())
+//            .waypoints()) {
+//            final Location l = wayp.getLocation();
+//            if (!l.getWorld().equals(baseloc.getWorld())) {
+//                continue;
+//            }
+//            final double d = baseloc.distanceSquared(l);
+//            if (d < dist) {
+//                dist = d;
+//                nearest = l;
+//            }
+//        }
+//        return nearest;
+        return null;
     }
 
     @Override
     public void run() {
-        if (!npc.isSpawned()) {
+        if (!this.npc.isSpawned()) {
             return;
         }
-        stats_ticksSpawned++;
-        cTick++;
-        if (cTick >= SentinelPlugin.instance.tickRate) {
-            cTick = 0;
+        this.stats_ticksSpawned++;
+        this.cTick++;
+        if (this.cTick >= SentinelPlugin.instance.tickRate) {
+            this.cTick = 0;
             runUpdate();
         }
     }
@@ -1819,42 +1838,42 @@ public class SentinelTrait extends Trait {
 
     @Override
     public void onSpawn() {
-        stats_timesSpawned++;
-        setHealth(health);
-        setInvincible(invincible);
-        if (respawnMe != null) {
-            respawnMe.cancel();
-            respawnMe = null;
+        this.stats_timesSpawned++;
+        setHealth(this.health);
+        setInvincible(this.invincible);
+        if (this.respawnMe != null) {
+            this.respawnMe.cancel();
+            this.respawnMe = null;
         }
     }
 
-    public void sayTo(Player player, String message) {
-        SpeechContext sc = new SpeechContext(npc, message, player);
-        npc.getDefaultSpeechController().speak(sc, "chat");
+    public void sayTo(final Player player, final String message) {
+        final SpeechContext sc = new SpeechContext(this.npc, message, player);
+        this.npc.getDefaultSpeechController().speak(sc, "chat");
     }
 
     @EventHandler
-    public void onPlayerMovesInRange(PlayerMoveEvent event) {
-        if (!npc.isSpawned()) {
+    public void onPlayerMovesInRange(final PlayerMoveEvent event) {
+        if (!this.npc.isSpawned()) {
             return;
         }
         if (!event.getTo().getWorld().equals(getLivingEntity().getLocation().getWorld())) {
             return;
         }
-        double dist = event.getTo().distanceSquared(getLivingEntity().getLocation());
-        boolean known = greetedAlready.contains(event.getPlayer().getUniqueId());
-        if (dist < greetRange && !known && canSee(event.getPlayer())) {
-            greetedAlready.add(event.getPlayer().getUniqueId());
-            boolean enemy = shouldTarget(event.getPlayer());
-            if (enemy && warningText != null && warningText.length() > 0) {
-                sayTo(event.getPlayer(), warningText);
+        final double dist = event.getTo().distanceSquared(getLivingEntity().getLocation());
+        final boolean known = this.greetedAlready.contains(event.getPlayer().getUniqueId());
+        if (dist < this.greetRange && !known && canSee(event.getPlayer())) {
+            this.greetedAlready.add(event.getPlayer().getUniqueId());
+            final boolean enemy = shouldTarget(event.getPlayer());
+            if (enemy && this.warningText != null && this.warningText.length() > 0) {
+                sayTo(event.getPlayer(), this.warningText);
             }
-            else if (!enemy && greetingText != null && greetingText.length() > 0) {
-                sayTo(event.getPlayer(), greetingText);
+            else if (!enemy && this.greetingText != null && this.greetingText.length() > 0) {
+                sayTo(event.getPlayer(), this.greetingText);
             }
         }
-        else if (dist >= greetRange + 1 && known) {
-            greetedAlready.remove(event.getPlayer().getUniqueId());
+        else if (dist >= this.greetRange + 1 && known) {
+            this.greetedAlready.remove(event.getPlayer().getUniqueId());
             // TODO: Farewell text perhaps?
         }
     }
@@ -1862,23 +1881,24 @@ public class SentinelTrait extends Trait {
     public HashMap<UUID, Boolean> needsDropsClear = new HashMap<UUID, Boolean>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void whenSomethingMightDie(EntityDamageByEntityEvent event) {
-        needsDropsClear.remove(event.getEntity().getUniqueId());
+    public void whenSomethingMightDie(final EntityDamageByEntityEvent event) {
+        this.needsDropsClear.remove(event.getEntity().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void whenWeDie(EntityDeathEvent event) {
-        if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity())
-                && CitizensAPI.getNPCRegistry().getNPC(event.getEntity()).getUniqueId().equals(npc.getUniqueId())) {
+    public void whenWeDie(final EntityDeathEvent event) {
+        if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity()) &&
+            CitizensAPI.getNPCRegistry().getNPC(event.getEntity()).getUniqueId().equals(this.npc.getUniqueId())) {
             event.getDrops().clear();
-            if (event instanceof PlayerDeathEvent && !SentinelPlugin.instance.getConfig().getBoolean("random.death messages", true)) {
+            if (event instanceof PlayerDeathEvent &&
+                !SentinelPlugin.instance.getConfig().getBoolean("random.death messages", true)) {
                 ((PlayerDeathEvent) event).setDeathMessage("");
             }
             if (!SentinelPlugin.instance.getConfig().getBoolean("random.workaround drops", false)) {
-                event.getDrops().addAll(drops);
+                event.getDrops().addAll(this.drops);
             }
             else {
-                for (ItemStack item : drops) {
+                for (final ItemStack item : this.drops) {
                     event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), item.clone());
                 }
             }
@@ -1888,80 +1908,85 @@ public class SentinelTrait extends Trait {
     }
 
     @EventHandler(priority = EventPriority.LOW)
-    public void whenSomethingDies(EntityDeathEvent event) {
-        if (event.getEntity().getType() != EntityType.PLAYER && needsDropsClear.containsKey(event.getEntity().getUniqueId())) {
+    public void whenSomethingDies(final EntityDeathEvent event) {
+        if (event.getEntity().getType() != EntityType.PLAYER &&
+            this.needsDropsClear.containsKey(event.getEntity().getUniqueId())) {
             event.getDrops().clear();
             event.setDroppedExp(0);
         }
     }
 
     public void onDeath() {
-        if (npc.hasTrait(Spawned.class)) {
-            npc.getTrait(Spawned.class).setSpawned(false);
+        if (this.npc.hasTrait(Spawned.class)) {
+            this.npc.getTrait(Spawned.class).setSpawned(false);
         }
-        greetedAlready.clear();
-        currentTargets.clear();
-        if (respawnTime < 0) {
-            BukkitRunnable removeMe = new BukkitRunnable() {
+        this.greetedAlready.clear();
+        this.currentTargets.clear();
+        if (this.respawnTime < 0) {
+            final BukkitRunnable removeMe = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    npc.destroy();
+                    SentinelTrait.this.npc.destroy();
                 }
             };
             removeMe.runTaskLater(SentinelPlugin.instance, 1);
         }
-        else if (respawnTime > 0) {
-            final long rsT = respawnTime;
-            respawnMe = new BukkitRunnable() {
+        else if (this.respawnTime > 0) {
+            final long rsT = this.respawnTime;
+            this.respawnMe = new BukkitRunnable() {
                 long timer = 0;
 
                 @Override
                 public void run() {
-                    if (CitizensAPI.getNPCRegistry().getById(npc.getId()) != null) {
-                        if (npc.isSpawned()) {
+                    if (CitizensAPI.getNPCRegistry().getById(SentinelTrait.this.npc.getId()) != null) {
+                        if (SentinelTrait.this.npc.isSpawned()) {
                             this.cancel();
-                            respawnMe = null;
+                            SentinelTrait.this.respawnMe = null;
                             return;
                         }
-                        if (timer >= rsT) {
-                            if (spawnPoint == null && npc.getStoredLocation() == null) {
-                                SentinelPlugin.instance.getLogger().warning("NPC " + npc.getId() + " has a null spawn point and can't be spawned. Perhaps the world was deleted?");
+                        if (this.timer >= rsT) {
+                            if (SentinelTrait.this.spawnPoint == null &&
+                                SentinelTrait.this.npc.getStoredLocation() == null) {
+                                SentinelPlugin.instance.getLogger().warning("NPC " + SentinelTrait.this.npc.getId() +
+                                                                            " has a null spawn point and can't be spawned. Perhaps the world was deleted?");
                                 this.cancel();
                                 return;
                             }
-                            npc.spawn(spawnPoint == null ? npc.getStoredLocation() : spawnPoint);
+                            SentinelTrait.this.npc.spawn(SentinelTrait.this.spawnPoint == null
+                                                             ? SentinelTrait.this.npc.getStoredLocation()
+                                                             : SentinelTrait.this.spawnPoint);
                             this.cancel();
-                            respawnMe = null;
+                            SentinelTrait.this.respawnMe = null;
                             return;
                         }
-                        timer += 10;
+                        this.timer += 10;
                     }
                     else {
-                        respawnMe = null;
+                        SentinelTrait.this.respawnMe = null;
                         this.cancel();
                         return;
                     }
                 }
             };
-            respawnMe.runTaskTimer(SentinelPlugin.instance, 10, 10);
+            this.respawnMe.runTaskTimer(SentinelPlugin.instance, 10, 10);
         }
     }
 
     @Override
     public void onDespawn() {
-        currentTargets.clear();
+        this.currentTargets.clear();
     }
 
-    public void setHealth(double heal) {
-        health = heal;
-        if (npc.isSpawned()) {
-            getLivingEntity().setMaxHealth(health);
-            getLivingEntity().setHealth(health);
+    public void setHealth(final double heal) {
+        this.health = heal;
+        if (this.npc.isSpawned()) {
+            getLivingEntity().setMaxHealth(this.health);
+            getLivingEntity().setHealth(this.health);
         }
     }
 
-    public void setInvincible(boolean inv) {
-        invincible = inv;
-        npc.setProtected(invincible);
+    public void setInvincible(final boolean inv) {
+        this.invincible = inv;
+        this.npc.setProtected(this.invincible);
     }
 }
